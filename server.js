@@ -1,11 +1,19 @@
-const express = require('express');
-const fetch = require('node-fetch');
-const path = require('path');
+import express from 'express';
+import fetch from 'node-fetch';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
 const app = express();
 
+// Middleware
 app.use(express.json());
-app.use(express.static('public'));
+app.use(express.static(path.join(__dirname, 'public')));
 
+// Ruta de traducción
 app.post('/translate', async (req, res) => {
   const { word } = req.body;
   console.log('Petición a /translate con palabra:', word);
@@ -32,14 +40,7 @@ app.post('/translate', async (req, res) => {
   }
 });
 
-
-    const data = await response.json();
-    res.json({ translation: data.translatedText.toLowerCase() });
-  } catch (error) {
-    res.status(500).json({ error: 'Error en la traducción' });
-  }
-});
-
+// Puerto
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Servidor escuchando en puerto ${PORT}`);
