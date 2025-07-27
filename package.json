@@ -3,12 +3,14 @@
   "version": "1.0.0",
   "description": "Servidor para traducción y entrenamiento de palabras de canciones",
   "main": "server.js",
+  "type": "module",
   "scripts": {
     "start": "node server.js"
   },
   "dependencies": {
     "express": "^4.18.2",
-    "node-fetch": "^2.6.12"
+    "node-fetch": "^2.6.12",
+    "@vitalets/google-translate-api": "^8.0.0"
   },
   "engines": {
     "node": ">=14.0.0"
