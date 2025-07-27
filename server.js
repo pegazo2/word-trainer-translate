@@ -23,7 +23,7 @@ app.post('/translate', async (req, res) => {
   }
 
   try {
-    const response = await fetch('https://translate.argosopentech.com/translate', {
+    const response = await fetch('https://libretranslate.de/translate', {
       method: 'POST',
       body: JSON.stringify({
         q: word,
