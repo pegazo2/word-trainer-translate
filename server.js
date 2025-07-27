@@ -8,6 +8,7 @@ app.use(express.static('public'));
 
 app.post('/translate', async (req, res) => {
   const { word } = req.body;
+  console.log('Petición a /translate con palabra:', word);
   if (!word) return res.status(400).json({ error: 'Falta la palabra' });
 
   try {
@@ -21,6 +22,16 @@ app.post('/translate', async (req, res) => {
       }),
       headers: { 'Content-Type': 'application/json' }
     });
+
+    const data = await response.json();
+    console.log('Respuesta de libretranslate:', data);
+    res.json({ translation: data.translatedText.toLowerCase() });
+  } catch (error) {
+    console.error('Error en traducción:', error);
+    res.status(500).json({ error: 'Error en la traducción' });
+  }
+});
+
 
     const data = await response.json();
     res.json({ translation: data.translatedText.toLowerCase() });
