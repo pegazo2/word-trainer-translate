@@ -221,19 +221,24 @@ ul#savedWords li button:hover {
   <p id="savedCount" style="margin-top: 0.5rem;">Palabras guardadas: 0</p>
 <button onclick="descargarPalabras()">⬇️ Descargar palabras (.txt)</button>
 
- <script>
- let words = [];
+<script>
+  let words = [];
   let current = 0;
   let saved = [];
-  let translationPairs = []; // guardará objetos { en: 'palabra_en_ingles', es: 'palabra_en_español' }
+  let translationPairs = [];
 
-  // Al cargar la página, recupera palabras guardadas y actualiza contador
   window.onload = function () {
     const savedData = localStorage.getItem('savedWords');
     if (savedData) {
       saved = JSON.parse(savedData);
       renderSavedWords();
     }
+
+    const storedPairs = localStorage.getItem('translationPairs');
+    if (storedPairs) {
+      translationPairs = JSON.parse(storedPairs);
+    }
+
     actualizarContadorGuardadas();
   };
 
@@ -265,25 +270,55 @@ ul#savedWords li button:hover {
       output.appendChild(span);
     }
   }
+function checkWord() {
+  const input = document.getElementById('userInput').value.trim().toLowerCase();
+  if (current >= words.length) return;
 
-  function checkWord() {
-    const input = document.getElementById('userInput').value.trim().toLowerCase();
-    if (current >= words.length) return;
+  const currentWord = words[current];
 
-    if (input === words[current].toLowerCase()) {
-      current++;
-      updateDisplay();
-      updateCounter();
-      document.getElementById('userInput').value = '';
+  // Buscar la traducción guardada
+  const pair = translationPairs.find(pair => pair.en.toLowerCase() === currentWord.toLowerCase());
 
-      if (current < words.length) {
-        speak(words[current], 0.8);
-      } else {
-        alert('¡Completado!');
-        document.getElementById('userInput').disabled = true;
-      }
+  if (!pair) {
+    alert(`No has guardado la traducción de "${currentWord}" aún.`);
+    return;
+  }
+
+  const correctTranslation = pair.es.toLowerCase();
+
+  if (input === correctTranslation) {
+    alert("✅ ¡Correcto!");
+  } else {
+    alert(`❌ Incorrecto. La traducción correcta era: "${pair.es}"`);
+  }
+
+  // Limpiar campo de entrada
+  document.getElementById('userInput').value = '';
+
+  // Pasar a la siguiente palabra
+  current++;
+  if (current < words.length) {
+    document.getElementById('word').textContent = words[current];
+  } else {
+    alert("¡Terminaste todas las palabras!");
+  }
+}
+
+  if (input === pair.es.toLowerCase()) {
+    current++;
+    updateDisplay();
+    updateCounter();
+    document.getElementById('userInput').value = '';
+
+    if (current < words.length) {
+      speak(words[current], 0.8);
+    } else {
+      alert('¡Completado!');
+      document.getElementById('userInput').disabled = true;
     }
   }
+}
+
 
   function updateCounter() {
     const counter = document.getElementById('wordCounter');
