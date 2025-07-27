@@ -222,223 +222,143 @@ ul#savedWords li button:hover {
 <button onclick="descargarPalabras()">⬇️ Descargar palabras (.txt)</button>
 
 <script>
-  let words = [];
-  let current = 0;
-  let saved = [];
-  let translationPairs = [];
+  let words = [], current = 0, saved = [];
 
-  window.onload = function () {
-    const savedData = localStorage.getItem('savedWords');
-    if (savedData) {
-      saved = JSON.parse(savedData);
-      renderSavedWords();
-    }
-
-    const storedPairs = localStorage.getItem('translationPairs');
-    if (storedPairs) {
-      translationPairs = JSON.parse(storedPairs);
-    }
-
+  window.onload = () => {
+    const sd = localStorage.getItem('savedWords');
+    if (sd) { saved = JSON.parse(sd); renderSavedWords(); }
     actualizarContadorGuardadas();
   };
 
   function startTraining() {
-    const lyrics = document.getElementById('lyrics').value;
-    if (!lyrics.trim()) {
-      alert('Por favor pega la letra antes de iniciar.');
-      return;
-    }
-    words = lyrics.trim().split(/\s+/);
+    const lyrics = document.getElementById('lyrics').value.trim();
+    if (!lyrics) return alert('Por favor pega la letra.');
+    words = lyrics.split(/\s+/);
     current = 0;
     document.getElementById('output').innerHTML = '';
     document.getElementById('userInput').value = '';
     document.getElementById('userInput').disabled = false;
-    document.getElementById('userInput').focus();
     updateCounter();
-    speak(words[current], 0.8);
+    speak(words[current]);
   }
 
   function updateDisplay() {
     const output = document.getElementById('output');
     output.innerHTML = '';
-
-    for (let i = 0; i < current && i < words.length; i++) {
+    for (let i = 0; i < current; i++) {
       const span = document.createElement('span');
-      span.className = 'word correct';
-      if (saved.includes(words[i])) span.classList.add('saved');
+      span.className = 'word correct' + (saved.includes(words[i]) ? ' saved' : '');
       span.textContent = words[i];
       output.appendChild(span);
     }
   }
 
- async function checkWord() {
-  const input = document.getElementById('userInput').value.trim().toLowerCase();
-  if (current >= words.length) return;
-
-  const currentWord = words[current];
-
-  if (input === '') return; // no hacer nada si está vacío
-
-  // Consultar traducción automática
-  const traduccion = await traducirPalabra(currentWord);
-
-  if (input === traduccion) {
-    alert('✅ ¡Correcto!');
-    current++;
-    updateDisplay();
-    updateCounter();
-    document.getElementById('userInput').value = '';
-
-    if (current < words.length) {
-      speak(words[current], 0.8);
-    } else {
-      alert('¡Completado!');
-      document.getElementById('userInput').disabled = true;
+  async function traducirPalabra(palabra) {
+    try {
+      const resp = await fetch('https://libretranslate.com/translate', {
+        method: 'POST',
+        body: JSON.stringify({ q: palabra, source: 'en', target: 'es', format: 'text' }),
+        headers: { 'Content-Type': 'application/json' }
+      });
+      const js = await resp.json();
+      return js.translatedText.toLowerCase().trim();
+    } catch {
+      alert('Error al traducir');
+      return '';
     }
-  } else {
-    alert(`❌ Incorrecto. La traducción correcta es: "${traduccion}"`);
-    document.getElementById('userInput').value = '';
   }
-}
 
-
-    const correctTranslation = pair.es.toLowerCase();
-
-    if (input === correctTranslation) {
-      alert("✅ ¡Correcto!");
+  async function checkWord() {
+    const input = document.getElementById('userInput').value.trim().toLowerCase();
+    if (current >= words.length || !input) return;
+    const cw = words[current].replace(/[.,!?;:"]/g, '').toLowerCase();
+    const tradu = await traducirPalabra(cw);
+    if (!tradu) return;
+    if (input === tradu) {
+      alert('✅ ¡Correcto!');
       current++;
-      updateDisplay();
-      updateCounter();
+      updateDisplay(); updateCounter();
       document.getElementById('userInput').value = '';
-
-      if (current < words.length) {
-        speak(words[current], 0.8);
-      } else {
+      if (current < words.length) speak(words[current]);
+      else {
         alert('¡Completado!');
         document.getElementById('userInput').disabled = true;
       }
     } else {
-      alert(`❌ Incorrecto. La traducción correcta era: "${pair.es}"`);
+      alert(`❌ Incorrecto. Era: "${tradu}"`);
       document.getElementById('userInput').value = '';
     }
   }
 
   function updateCounter() {
-    const counter = document.getElementById('wordCounter');
-    if (current < words.length) {
-      counter.textContent = `Palabra a escribir: ${current + 1} de ${words.length}`;
-    } else {
-      counter.textContent = 'Has completado todas las palabras 🎉';
-    }
+    const c = document.getElementById('wordCounter');
+    c.textContent = current < words.length
+      ? `Palabra a traducir: ${current + 1} de ${words.length}`
+      : 'Has completado todas las palabras 🎉';
   }
 
   function speak(text, rate = 0.8) {
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = 'en-US';
-    utterance.rate = rate;
-    speechSynthesis.cancel();
-    speechSynthesis.speak(utterance);
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = 'en-US'; u.rate = rate;
+    window.speechSynthesis.cancel(); window.speechSynthesis.speak(u);
   }
 
   function revealWord() {
-    if (current < words.length) {
-      alert('La palabra es: ' + words[current]);
-    } else {
-      alert('¡Ya completaste todas las palabras!');
-    }
+    alert(current < words.length ? `La palabra es: ${words[current]}` : '¡Terminado!');
   }
 
   function saveWord() {
-    const word = words[current - 1];
-    if (!word) return;
-
-    // Evita duplicados
-    if (!saved.includes(word)) {
-      saved.push(word);
-
-      // Preguntar al usuario la traducción
-      const translation = prompt(`¿Cuál es la traducción al español de "${word}"?`);
-      if (translation && translation.trim() !== '') {
-        translationPairs.push({ en: word, es: translation.trim() });
-
-        // Guardar en localStorage
-        localStorage.setItem('savedWords', JSON.stringify(saved));
-        localStorage.setItem('translationPairs', JSON.stringify(translationPairs));
-
-        renderSavedWords();
-        actualizarContadorGuardadas();
-      } else {
-        alert('No se guardó la traducción porque estaba vacía.');
-      }
+    const w = words[current - 1];
+    if (w && !saved.includes(w)) {
+      saved.push(w);
+      localStorage.setItem('savedWords', JSON.stringify(saved));
+      renderSavedWords();
+      actualizarContadorGuardadas();
     }
   }
 
-  // ✅ FUNCIÓN MODIFICADA con botón para escuchar 🔊 y eliminar ❌
   function renderSavedWords() {
     const list = document.getElementById('savedWords');
     list.innerHTML = '';
-    saved.forEach((word, index) => {
+    saved.forEach((w,i) => {
       const li = document.createElement('li');
-      li.textContent = word;
-
-      // 🔊 Botón para escuchar
+      li.textContent = w;
       const btnSpeak = document.createElement('button');
-      btnSpeak.textContent = '🔊';
-      btnSpeak.onclick = () => speak(word, 0.8);
-
-      // ❌ Botón para eliminar
+      btnSpeak.textContent = '🔊'; btnSpeak.onclick = () => speak(w);
       const btnDelete = document.createElement('button');
       btnDelete.textContent = '❌';
-      btnDelete.style.backgroundColor = '#e74c3c';
       btnDelete.style.marginLeft = '10px';
-      btnDelete.onclick = () => deleteSavedWord(index);
-
-      li.appendChild(btnSpeak);
-      li.appendChild(btnDelete);
+      btnDelete.onclick = () => {
+        if (confirm(`Eliminar "${w}"?`)) {
+          saved.splice(i,1);
+          localStorage.setItem('savedWords', JSON.stringify(saved));
+          renderSavedWords();
+          actualizarContadorGuardadas();
+        }
+      };
+      li.appendChild(btnSpeak); li.appendChild(btnDelete);
       list.appendChild(li);
     });
   }
 
-  function readAgainNormal() {
-    if (current < words.length) {
-      speak(words[current], 0.8);
-    }
-  }
-
-  function readAgainSlow() {
-    if (current < words.length) {
-      speak(words[current], 0.5);
-    }
-  }
-
-  function openPractice() {
-    window.open('practice-saved.html', '_blank');
-  }
-
   function actualizarContadorGuardadas() {
-    const guardadas = JSON.parse(localStorage.getItem('savedWords')) || [];
-    document.getElementById('savedCount').textContent = `Palabras guardadas: ${guardadas.length}`;
+    const cnt = JSON.parse(localStorage.getItem('savedWords') || '[]').length;
+    document.getElementById('savedCount').textContent = `Palabras guardadas: ${cnt}`;
   }
+
+  function readAgainNormal() { if (current < words.length) speak(words[current]); }
+  function readAgainSlow() { if (current < words.length) speak(words[current], 0.5); }
+
+  function openPractice() { window.open('practice-saved.html', '_blank'); }
 
   function descargarPalabras() {
-    const guardadas = JSON.parse(localStorage.getItem('savedWords')) || [];
-    const texto = guardadas.join('\n');  // Solo las palabras, sin traducción
-    const blob = new Blob([texto], { type: 'text/plain' });
-    const enlace = document.createElement('a');
-    enlace.href = URL.createObjectURL(blob);
-    enlace.download = 'palabras_guardadas.txt';
-    enlace.click();
-  }
-
-  // ✅ NUEVA FUNCIÓN: eliminar palabra guardada
-  function deleteSavedWord(index) {
-    if (confirm(`¿Eliminar "${saved[index]}" de las palabras guardadas?`)) {
-      saved.splice(index, 1); // Elimina del array
-      localStorage.setItem('savedWords', JSON.stringify(saved)); // Actualiza almacenamiento
-      renderSavedWords(); // Redibuja la lista
-      actualizarContadorGuardadas(); // Actualiza el contador
-    }
+    const arr = JSON.parse(localStorage.getItem('savedWords') || '[]');
+    const blob = new Blob([arr.join('\n')], { type: 'text/plain' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'palabras_guardadas.txt'; a.click();
   }
 </script>
+
 </body>
 </html>
