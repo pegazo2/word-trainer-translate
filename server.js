@@ -1,8 +1,8 @@
 import express from 'express';
-import fetch from 'node-fetch';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
+import translate from '@vitalets/google-translate-api';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -21,28 +21,9 @@ app.post('/translate', async (req, res) => {
   }
 
   try {
-    const response = await fetch('https://libretranslate.com/translate', {
-      method: 'POST',
-      body: JSON.stringify({
-        q: word,
-        source: 'en',
-        target: 'es',
-        format: 'text'
-      }),
-      headers: { 'Content-Type': 'application/json' }
-    });
-
-    if (!response.ok) {
-      const errorData = await response.text(); // Lee texto para debug
-      console.error('Error respuesta libretranslate:', errorData);
-      return res.status(500).json({ error: 'Error en la API de traducción' });
-    }
-
-    const data = await response.json();
-    console.log('Respuesta de traducción:', data);
-
-    res.json({ translation: data.translatedText.toLowerCase() });
-
+    const result = await translate(word, { from: 'en', to: 'es' });
+    console.log('Traducción:', result.text);
+    res.json({ translation: result.text.toLowerCase() });
   } catch (error) {
     console.error('Error en traducción:', error);
     res.status(500).json({ error: 'Error en la traducción' });
