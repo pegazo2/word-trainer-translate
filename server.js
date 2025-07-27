@@ -9,11 +9,9 @@ const __dirname = dirname(__filename);
 
 const app = express();
 
-// Middleware
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Ruta de traducción
 app.post('/translate', async (req, res) => {
   const { word } = req.body;
   console.log('Recibido:', word);
@@ -23,7 +21,7 @@ app.post('/translate', async (req, res) => {
   }
 
   try {
-    const response = await fetch('https://libretranslate.de/translate', {
+    const response = await fetch('https://libretranslate.com/translate', {
       method: 'POST',
       body: JSON.stringify({
         q: word,
@@ -33,6 +31,12 @@ app.post('/translate', async (req, res) => {
       }),
       headers: { 'Content-Type': 'application/json' }
     });
+
+    if (!response.ok) {
+      const errorData = await response.text(); // Lee texto para debug
+      console.error('Error respuesta libretranslate:', errorData);
+      return res.status(500).json({ error: 'Error en la API de traducción' });
+    }
 
     const data = await response.json();
     console.log('Respuesta de traducción:', data);
@@ -45,7 +49,6 @@ app.post('/translate', async (req, res) => {
   }
 });
 
-// Puerto
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Servidor escuchando en puerto ${PORT}`);
