@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Práctica de Palabras Guardadas</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 20px;
+    }
+    #word {
+      font-size: 32px;
+      margin: 20px 0;
+    }
+    #result {
+      margin: 10px 0;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <h1>Práctica de Palabras Guardadas</h1>
+  <div id="word">Presiona "Comenzar"</div>
+  <input type="text" id="userInput" placeholder="Escribe su traducción en español">
+  <br><br>
+  <button onclick="checkAnswer()">Verificar</button>
+  <button onclick="startPractice()">Comenzar</button>
+  <div id="result"></div>
+  <script>
+    let savedWords = [];
+    let currentIndex = 0;
+
+    function startPractice() {
+      const data = localStorage.getItem('savedWords');
+      if (data) {
+        savedWords = JSON.parse(data);
+        currentIndex = 0;
+        showWord();
+      } else {
+        document.getElementById('word').innerText = 'No hay palabras guardadas.';
+      }
+    }
+
+    function showWord() {
+      if (currentIndex < savedWords.length) {
+        document.getElementById('word').innerText = savedWords[currentIndex];
+        document.getElementById('userInput').value = '';
+        document.getElementById('result').innerText = '';
+        speak(savedWords[currentIndex]);
+      } else {
+        document.getElementById('word').innerText = '¡Práctica completada!';
+        document.getElementById('result').innerText = '';
+      }
+    }
+
+    function checkAnswer() {
+      const userInput = document.getElementById('userInput').value.trim().toLowerCase();
+      const currentWord = savedWords[currentIndex];
+
+      // Usamos LibreTranslate
+      fetch('https://libretranslate.com/translate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          q: currentWord,
+          source: 'en',
+          target: 'es',
+          format: 'text'
+        })
+      })
+      .then(res => res.json())
+      .then(data => {
+        const correct = data.translatedText.toLowerCase();
+        if (userInput === correct) {
+          document.getElementById('result').innerText = '✅ ¡Correcto!';
+        } else {
+          document.getElementById('result').innerText = `❌ Incorrecto. Correcto: ${correct}`;
+        }
+        currentIndex++;
+        setTimeout(showWord, 1500);
+      })
+      .catch(err => {
+        document.getElementById('result').innerText = 'Error al traducir. Intenta de nuevo.';
+      });
+    }
+
+    function speak(text) {
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'en-US';
+      speechSynthesis.speak(utterance);
+    }
+  </script>
+</body>
+</html>
