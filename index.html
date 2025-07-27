@@ -271,19 +271,36 @@ ul#savedWords li button:hover {
     }
   }
 
-  function checkWord() {
-    const input = document.getElementById('userInput').value.trim().toLowerCase();
-    if (current >= words.length) return;
+ async function checkWord() {
+  const input = document.getElementById('userInput').value.trim().toLowerCase();
+  if (current >= words.length) return;
 
-    const currentWord = words[current];
+  const currentWord = words[current];
 
-    // Buscar la traducción guardada
-    const pair = translationPairs.find(pair => pair.en.toLowerCase() === currentWord.toLowerCase());
+  if (input === '') return; // no hacer nada si está vacío
 
-    if (!pair) {
-      alert(`No has guardado la traducción de "${currentWord}" aún.`);
-      return;
+  // Consultar traducción automática
+  const traduccion = await traducirPalabra(currentWord);
+
+  if (input === traduccion) {
+    alert('✅ ¡Correcto!');
+    current++;
+    updateDisplay();
+    updateCounter();
+    document.getElementById('userInput').value = '';
+
+    if (current < words.length) {
+      speak(words[current], 0.8);
+    } else {
+      alert('¡Completado!');
+      document.getElementById('userInput').disabled = true;
     }
+  } else {
+    alert(`❌ Incorrecto. La traducción correcta es: "${traduccion}"`);
+    document.getElementById('userInput').value = '';
+  }
+}
+
 
     const correctTranslation = pair.es.toLowerCase();
 
