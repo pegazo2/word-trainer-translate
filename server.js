@@ -16,11 +16,14 @@ app.use(express.static(path.join(__dirname, 'public')));
 // Ruta de traducción
 app.post('/translate', async (req, res) => {
   const { word } = req.body;
-  console.log('Petición a /translate con palabra:', word);
-  if (!word) return res.status(400).json({ error: 'Falta la palabra' });
+  console.log('Recibido:', word);
+
+  if (!word) {
+    return res.status(400).json({ error: 'Falta la palabra' });
+  }
 
   try {
-    const response = await fetch(const response = await fetch('https://translate.argosopentech.com/translate', {
+    const response = await fetch('https://translate.argosopentech.com/translate', {
       method: 'POST',
       body: JSON.stringify({
         q: word,
@@ -32,8 +35,10 @@ app.post('/translate', async (req, res) => {
     });
 
     const data = await response.json();
-    console.log('Respuesta de libretranslate:', data);
+    console.log('Respuesta de traducción:', data);
+
     res.json({ translation: data.translatedText.toLowerCase() });
+
   } catch (error) {
     console.error('Error en traducción:', error);
     res.status(500).json({ error: 'Error en la traducción' });
