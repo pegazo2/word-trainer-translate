@@ -20,7 +20,7 @@ app.post('/translate', async (req, res) => {
   if (!word) return res.status(400).json({ error: 'Falta la palabra' });
 
   try {
-    const response = await fetch('https://libretranslate.de/translate', {
+    const response = await fetch(const response = await fetch('https://translate.argosopentech.com/translate', {
       method: 'POST',
       body: JSON.stringify({
         q: word,
