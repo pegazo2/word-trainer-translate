@@ -186,6 +186,8 @@ ul#savedWords li button {
 ul#savedWords li button:hover {
   background-color: #1c5d8b;
 }
+
+
   </style>
 </head>
 <body>
@@ -206,10 +208,9 @@ ul#savedWords li button:hover {
   <input
     type="text"
     id="userInput"
-    placeholder="Escribe la traducción al español aquí"
-    onkeydown="if(event.key==='Enter') checkWord()"
+    placeholder="Escribe la palabra aquí"
+    oninput="checkWord()"
     autocomplete="off"
-    disabled
   />
 
   <div id="output"></div>
@@ -218,7 +219,7 @@ ul#savedWords li button:hover {
   <ul id="savedWords"></ul>
   
   <p id="savedCount" style="margin-top: 0.5rem;">Palabras guardadas: 0</p>
-  <button onclick="descargarPalabras()">⬇️ Descargar palabras (.txt)</button>
+<button onclick="descargarPalabras()">⬇️ Descargar palabras (.txt)</button>
 
 <script>
   let words = [], current = 0, saved = [];
@@ -227,33 +228,29 @@ ul#savedWords li button:hover {
     const sd = localStorage.getItem('savedWords');
     if (sd) { saved = JSON.parse(sd); renderSavedWords(); }
     actualizarContadorGuardadas();
-    updateCounter();
   };
 
   function startTraining() {
     const lyrics = document.getElementById('lyrics').value.trim();
     if (!lyrics) return alert('Por favor pega la letra.');
-    words = lyrics.split(/\s+/).map(w => w.replace(/[.,!?;:"]/g, '').toLowerCase()).filter(w => w.length > 0);
+    words = lyrics.split(/\s+/);
     current = 0;
     document.getElementById('output').innerHTML = '';
     document.getElementById('userInput').value = '';
     document.getElementById('userInput').disabled = false;
-    updateDisplay();
-    mostrarPalabraActual();
+    updateCounter();
     speak(words[current]);
   }
 
-  function updateCounter() {
-    const c = document.getElementById('wordCounter');
-    c.textContent = current < words.length
-      ? `Palabra a traducir: ${current + 1} de ${words.length} — "${words[current]}"`
-      : 'Has completado todas las palabras 🎉';
-  }
-
-  function mostrarPalabraActual() {
-    updateCounter();
-    document.getElementById('userInput').value = '';
-    document.getElementById('userInput').focus();
+  function updateDisplay() {
+    const output = document.getElementById('output');
+    output.innerHTML = '';
+    for (let i = 0; i < current; i++) {
+      const span = document.createElement('span');
+      span.className = 'word correct' + (saved.includes(words[i]) ? ' saved' : '');
+      span.textContent = words[i];
+      output.appendChild(span);
+    }
   }
 
   async function traducirPalabra(palabra) {
@@ -279,37 +276,30 @@ ul#savedWords li button:hover {
   async function checkWord() {
     const input = document.getElementById('userInput').value.trim().toLowerCase();
     if (current >= words.length || !input) return;
-    const palabraActual = words[current];
-    const traduccionCorrecta = await traducirPalabra(palabraActual);
-    if (!traduccionCorrecta) return;
-    if (input === traduccionCorrecta) {
-      alert(`✅ ¡Correcto! "${palabraActual}" = "${traduccionCorrecta}"`);
+    const cw = words[current].replace(/[.,!?;:"]/g, '').toLowerCase();
+    const tradu = await traducirPalabra(cw);
+    if (!tradu) return;
+    if (input === tradu) {
+      alert('✅ ¡Correcto!');
       current++;
-      updateDisplay();
-      if (current < words.length) {
-        mostrarPalabraActual();
-        speak(words[current]);
-      } else {
+      updateDisplay(); updateCounter();
+      document.getElementById('userInput').value = '';
+      if (current < words.length) speak(words[current]);
+      else {
         alert('¡Completado!');
         document.getElementById('userInput').disabled = true;
-        updateCounter();
       }
     } else {
-      alert(`❌ Incorrecto. La traducción correcta de "${palabraActual}" es: "${traduccionCorrecta}"`);
+      alert(`❌ Incorrecto. Era: "${tradu}"`);
       document.getElementById('userInput').value = '';
-      document.getElementById('userInput').focus();
     }
   }
 
-  function updateDisplay() {
-    const output = document.getElementById('output');
-    output.innerHTML = '';
-    for (let i = 0; i < current; i++) {
-      const span = document.createElement('span');
-      span.className = 'word correct' + (saved.includes(words[i]) ? ' saved' : '');
-      span.textContent = words[i];
-      output.appendChild(span);
-    }
+  function updateCounter() {
+    const c = document.getElementById('wordCounter');
+    c.textContent = current < words.length
+      ? `Palabra a traducir: ${current + 1} de ${words.length}`
+      : 'Has completado todas las palabras 🎉';
   }
 
   function speak(text, rate = 0.8) {
@@ -318,8 +308,19 @@ ul#savedWords li button:hover {
     window.speechSynthesis.cancel(); window.speechSynthesis.speak(u);
   }
 
-  function revealWord() {
-    alert(current < words.length ? `La palabra es: ${words[current]}` : '¡Terminado!');
+  // Función revealWord modificada para mostrar la traducción en español
+  async function revealWord() {
+    if (current >= words.length) {
+      alert('¡Terminado!');
+      return;
+    }
+    const palabraActual = words[current];
+    try {
+      const traduccion = await traducirPalabra(palabraActual);
+      alert(`La palabra "${palabraActual}" significa: "${traduccion}"`);
+    } catch {
+      alert(`No se pudo obtener la traducción de "${palabraActual}"`);
+    }
   }
 
   function saveWord() {
@@ -374,5 +375,6 @@ ul#savedWords li button:hover {
     a.download = 'palabras_guardadas.txt'; a.click();
   }
 </script>
+
 </body>
 </html>
