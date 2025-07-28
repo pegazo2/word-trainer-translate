@@ -1,1 +1,170 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Practicar Palabras Guardadas</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f4f7fa;
+      margin: 0;
+      padding: 2rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    #wordDisplay {
+      font-size: 24px;
+      margin-bottom: 10px;
+      min-height: 30px;
+    }
+    input {
+      padding: 8px;
+      font-size: 18px;
+      width: 100%;
+      max-width: 600px;
+      margin-bottom: 10px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      box-sizing: border-box;
+    }
+    button {
+      margin: 0.3rem;
+      padding: 8px 12px;
+      font-size: 16px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      background-color: #3498db;
+      color: white;
+      transition: background-color 0.3s;
+    }
+    button:hover {
+      background-color: #2980b9;
+    }
+  </style>
+</head>
+<body>
+  <h2>Práctica con Palabras Guardadas</h2>
+  <div id="progress" style="font-weight: bold; margin-bottom: 10px;">Palabra 0 de 0</div>
+  <div id="wordDisplay">Presiona "Siguiente palabra" para comenzar</div>
+  <input type="text" id="userInput" placeholder="Escribe la palabra aquí..." autocomplete="off" disabled />
+  <div>
+    <button id="repeatNormal">🔊 Repetir normal</button>
+    <button id="repeatSlow">🐢 Repetir lento</button>
+    <button id="revealWord">👁️ Revelar palabra</button> <!-- ✅ NUEVO BOTÓN -->
+    <button id="nextWord">⏭️ Siguiente palabra</button>
+    <button id="backIndex">🏠 Volver a inicio</button>
+  </div>
+  <script>
+    let savedWords = JSON.parse(localStorage.getItem('savedWords')) || [];
+    let currentIndex = -1;
+    let wordsSeen = new Set();
 
+    const wordDisplay = document.getElementById('wordDisplay');
+    const userInput = document.getElementById('userInput');
+    const btnRepeatNormal = document.getElementById('repeatNormal');
+    const btnRepeatSlow = document.getElementById('repeatSlow');
+    const btnRevealWord = document.getElementById('revealWord'); // ✅ botón nuevo
+    const btnNextWord = document.getElementById('nextWord');
+    const btnBackIndex = document.getElementById('backIndex');
+    const progress = document.getElementById('progress');
+
+    function speakWord(word, rate=1) {
+      const utterance = new SpeechSynthesisUtterance(word);
+      utterance.lang = 'en-US';
+      utterance.rate = rate;
+      speechSynthesis.cancel();
+      speechSynthesis.speak(utterance);
+    }
+
+    function updateProgress() {
+      const total = savedWords.length;
+      const done = wordsSeen.size;
+      progress.textContent = `Palabra ${done} de ${total}`;
+    }
+
+    function nextWord() {
+      if (savedWords.length === 0) {
+        alert("No hay palabras guardadas para practicar.");
+        wordDisplay.textContent = "No hay palabras guardadas.";
+        userInput.value = '';
+        userInput.disabled = true;
+        progress.textContent = "Palabra 0 de 0";
+        return;
+      }
+      
+      if (wordsSeen.size === savedWords.length) {
+        alert("Has practicado todas las palabras guardadas.");
+        wordDisplay.textContent = "¡Has completado la práctica!";
+        userInput.value = '';
+        userInput.disabled = true;
+        progress.textContent = `Palabra ${savedWords.length} de ${savedWords.length}`;
+        return;
+      }
+
+      let randomIndex;
+      do {
+        randomIndex = Math.floor(Math.random() * savedWords.length);
+      } while (wordsSeen.has(randomIndex));
+
+      currentIndex = randomIndex;
+      wordsSeen.add(currentIndex);
+
+      userInput.value = "";
+      userInput.disabled = false;
+      wordDisplay.textContent = "Escribe la palabra aquí:";
+      userInput.focus();
+      speakWord(savedWords[currentIndex], 0.8);
+      updateProgress();
+    }
+
+    // 🔁 MODIFICADO: respuesta correcta = pasar a la siguiente palabra automáticamente
+    userInput.addEventListener('input', () => {
+      if (savedWords.length === 0 || currentIndex < 0) return;
+      if (userInput.value.trim().toLowerCase() === savedWords[currentIndex].toLowerCase()) {
+        wordDisplay.textContent = `¡Correcto! La palabra es: ${savedWords[currentIndex]}`;
+        userInput.disabled = true;
+        setTimeout(() => nextWord(), 1000); // pasa a la siguiente automáticamente
+      }
+    });
+
+    btnRepeatNormal.addEventListener('click', () => {
+      if (currentIndex >= 0 && savedWords.length > 0) {
+        speakWord(savedWords[currentIndex], 0.8);
+      }
+    });
+
+    btnRepeatSlow.addEventListener('click', () => {
+      if (currentIndex >= 0 && savedWords.length > 0) {
+        speakWord(savedWords[currentIndex], 0.5);
+      }
+    });
+
+    // ✅ FUNCIÓN NUEVA: revelar palabra actual
+    btnRevealWord.addEventListener('click', () => {
+      if (currentIndex >= 0 && savedWords.length > 0) {
+        wordDisplay.textContent = `La palabra es: ${savedWords[currentIndex]}`;
+        userInput.disabled = true;
+      }
+    });
+
+    btnNextWord.addEventListener('click', nextWord);
+
+    btnBackIndex.addEventListener('click', () => {
+      window.location.href = 'index.html';
+    });
+
+    window.onload = () => {
+      if (savedWords.length === 0) {
+        wordDisplay.textContent = "No hay palabras guardadas.";
+        userInput.disabled = true;
+        progress.textContent = "Palabra 0 de 0";
+      } else {
+        progress.textContent = `Palabra 0 de ${savedWords.length}`;
+      }
+    };
+  </script>
+</body>
+</html>
