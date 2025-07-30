@@ -253,22 +253,27 @@ ul#savedWords li button:hover {
     }
   }
 
- async function traducirPalabra(palabra) {
-  try {
-    const resp = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(palabra)}&langpair=en|es`);
-    const data = await resp.json();
-    console.log(data.responseData.translatedText); // Mostrar la traducción
-    return data.responseData.translatedText;
-  } catch (error) {
-    console.error("Error al traducir:", error);
-    return null;
+  async function traducirPalabra(palabra) {
+    try {
+      const resp = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(palabra)}&langpair=en|es`);
+      const data = await resp.json();
+      const traduccionLimpia = data.responseData.translatedText
+        .toLowerCase()
+        .trim()
+        .replace(/[.,!?¡¿"]/g, '');
+      console.log('Traducción:', traduccionLimpia);
+      return traduccionLimpia;
+    } catch (error) {
+      console.error("Error al traducir:", error);
+      return null;
+    }
   }
-}
-  
-
 
   async function checkWord() {
-    const input = document.getElementById('userInput').value.trim().toLowerCase();
+    const input = document.getElementById('userInput').value
+      .trim()
+      .toLowerCase()
+      .replace(/[.,!?¡¿"]/g, '');
     if (current >= words.length || !input) return;
     const cw = words[current].replace(/[.,!?;:"]/g, '').toLowerCase();
     const tradu = await traducirPalabra(cw);
@@ -276,7 +281,8 @@ ul#savedWords li button:hover {
     if (input === tradu) {
       alert('✅ ¡Correcto!');
       current++;
-      updateDisplay(); updateCounter();
+      updateDisplay();
+      updateCounter();
       document.getElementById('userInput').value = '';
       if (current < words.length) speak(words[current]);
       else {
@@ -299,21 +305,25 @@ ul#savedWords li button:hover {
   function speak(text, rate = 0.8) {
     const u = new SpeechSynthesisUtterance(text);
     u.lang = 'en-US'; u.rate = rate;
-    window.speechSynthesis.cancel(); window.speechSynthesis.speak(u);
+    window.speechSynthesis.cancel(); 
+    window.speechSynthesis.speak(u);
   }
 
-  // Función revealWord modificada para mostrar la traducción en español
   async function revealWord() {
     if (current >= words.length) {
-      alert('¡Terminado!');
+      alert('¡Ya completaste todas las palabras!');
       return;
     }
-    const palabraActual = words[current];
+    const palabraActual = words[current].replace(/[.,!?;:"]/g, '').toLowerCase();
     try {
       const traduccion = await traducirPalabra(palabraActual);
-      alert(`La palabra "${palabraActual}" significa: "${traduccion}"`);
+      if (traduccion) {
+        alert(`🔍 Traducción: "${palabraActual}" → "${traduccion}"`);
+      } else {
+        alert('❌ No se pudo obtener la traducción.');
+      }
     } catch {
-      alert(`No se pudo obtener la traducción de "${palabraActual}"`);
+      alert('⚠️ Error al traducir la palabra.');
     }
   }
 
@@ -334,7 +344,8 @@ ul#savedWords li button:hover {
       const li = document.createElement('li');
       li.textContent = w;
       const btnSpeak = document.createElement('button');
-      btnSpeak.textContent = '🔊'; btnSpeak.onclick = () => speak(w);
+      btnSpeak.textContent = '🔊'; 
+      btnSpeak.onclick = () => speak(w);
       const btnDelete = document.createElement('button');
       btnDelete.textContent = '❌';
       btnDelete.style.marginLeft = '10px';
@@ -346,7 +357,8 @@ ul#savedWords li button:hover {
           actualizarContadorGuardadas();
         }
       };
-      li.appendChild(btnSpeak); li.appendChild(btnDelete);
+      li.appendChild(btnSpeak);
+      li.appendChild(btnDelete);
       list.appendChild(li);
     });
   }
@@ -356,17 +368,24 @@ ul#savedWords li button:hover {
     document.getElementById('savedCount').textContent = `Palabras guardadas: ${cnt}`;
   }
 
-  function readAgainNormal() { if (current < words.length) speak(words[current]); }
-  function readAgainSlow() { if (current < words.length) speak(words[current], 0.5); }
+  function readAgainNormal() {
+    if (current < words.length) speak(words[current]);
+  }
+  function readAgainSlow() {
+    if (current < words.length) speak(words[current], 0.5);
+  }
 
-  function openPractice() { window.open('practice-saved.html', '_blank'); }
+  function openPractice() {
+    window.open('practice-saved.html', '_blank');
+  }
 
   function descargarPalabras() {
     const arr = JSON.parse(localStorage.getItem('savedWords') || '[]');
     const blob = new Blob([arr.join('\n')], { type: 'text/plain' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
-    a.download = 'palabras_guardadas.txt'; a.click();
+    a.download = 'palabras_guardadas.txt'; 
+    a.click();
   }
 </script>
 
