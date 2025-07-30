@@ -269,31 +269,36 @@ ul#savedWords li button:hover {
     }
   }
 
-  async function checkWord() {
-    const input = document.getElementById('userInput').value
-      .trim()
-      .toLowerCase()
-      .replace(/[.,!?¡¿"]/g, '');
-    if (current >= words.length || !input) return;
-    const cw = words[current].replace(/[.,!?;:"]/g, '').toLowerCase();
-    const tradu = await traducirPalabra(cw);
-    if (!tradu) return;
-    if (input === tradu) {
-      alert('✅ ¡Correcto!');
-      current++;
-      updateDisplay();
-      updateCounter();
-      document.getElementById('userInput').value = '';
-      if (current < words.length) speak(words[current]);
-      else {
-        alert('¡Completado!');
-        document.getElementById('userInput').disabled = true;
-      }
-    } else {
-      alert(`❌ Incorrecto. Era: "${tradu}"`);
-      document.getElementById('userInput').value = '';
+  function normalizar(texto) {
+  return texto.toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "") // elimina tildes
+    .trim();
+}
+
+async function checkWord() {
+  const input = document.getElementById('userInput').value.trim();
+  if (current >= words.length || !input) return;
+  const cw = words[current].replace(/[.,!?;:"]/g, '').toLowerCase();
+  const tradu = await traducirPalabra(cw);
+  if (!tradu) return;
+
+  if (normalizar(input) === normalizar(tradu)) {
+    alert('✅ ¡Correcto!');
+    current++;
+    updateDisplay();
+    updateCounter();
+    document.getElementById('userInput').value = '';
+    if (current < words.length) speak(words[current]);
+    else {
+      alert('¡Completado!');
+      document.getElementById('userInput').disabled = true;
     }
+  } else {
+    alert(`❌ Incorrecto. Era: "${tradu}"`);
+    document.getElementById('userInput').value = '';
   }
+}
 
   function updateCounter() {
     const c = document.getElementById('wordCounter');
