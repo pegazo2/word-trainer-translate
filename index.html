@@ -204,14 +204,14 @@ ul#savedWords li button:hover {
   </div>
 
   <div id="wordCounter"></div>
+<input
+  type="text"
+  id="userInput"
+  placeholder="Escribe la palabra aqui"
+  autocomplete="off"
+  onkeydown="if(event.key === 'Enter') checkWord()"
+/>
 
-  <input
-    type="text"
-    id="userInput"
-    placeholder="Escribe la palabra aquí"
-    oninput="checkWord()"
-    autocomplete="off"
-  />
 
   <div id="output"></div>
 
