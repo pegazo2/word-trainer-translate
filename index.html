@@ -269,6 +269,33 @@ ul#savedWords li button:hover {
     }
   }
 
+  // Quitar tildes
+function quitarTildes(texto) {
+  return texto.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+}
+
+// Normalizar texto: quita tildes, espacios y convierte a minúsculas
+function normalizarTexto(texto) {
+  return quitarTildes(texto).toLowerCase().replace(/\s+/g, '');
+}
+
+// Opcional: respuestas válidas alternativas para algunas palabras
+const alternativasPorPalabra = {
+  "we": ["nosotros", "nosotras"],
+  "i": ["yo"],
+  "you": ["tu", "usted"],
+  "they": ["ellos", "ellas"]
+};
+
+// Verifica si la traducción es válida
+function verificarRespuesta(palabraIngles, respuestaUsuario, traduccionCorrecta) {
+  const input = normalizarTexto(respuestaUsuario);
+  const correcta = normalizarTexto(traduccionCorrecta);
+  const alternativas = alternativasPorPalabra[palabraIngles] || [];
+  const alternativasNormalizadas = alternativas.map(normalizarTexto);
+  return input === correcta || alternativasNormalizadas.includes(input);
+}
+
   function normalizar(texto) {
   return texto.toLowerCase()
     .normalize("NFD")
@@ -277,7 +304,7 @@ ul#savedWords li button:hover {
 }
 
 async function checkWord() {
-  const input = document.getElementById('userInput').value.trim().toLowerCase();
+  const input = document.getElementById('userInput').value.trim();
   if (current >= words.length || !input) return;
 
   const cw = words[current].replace(/[.,!?;:"]/g, '').toLowerCase();
@@ -297,8 +324,7 @@ async function checkWord() {
     return;
   }
 
-  // Aquí va el resto del código para comparar y verificar
-  if (input === tradu) {
+  if (verificarRespuesta(cw, input, tradu)) {
     alert('✅ ¡Correcto!');
     current++;
     updateDisplay();
