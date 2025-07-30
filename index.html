@@ -253,26 +253,19 @@ ul#savedWords li button:hover {
     }
   }
 
-  async function traducirPalabra(palabra) {
-    try {
-      const resp = await fetch('https://api.mymemory.translated.net/get?q=hello world!&langpair=en|es'), {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({
-    q: palabra,
-    source: 'en',
-    target: 'es',
-    format: 'text'
-  })
-});
-
-      const data = await resp.json();
-      return data.translatedText.toLowerCase().trim();
-    } catch {
-      alert('Error al traducir');
-      return '';
-    }
+ async function traducirPalabra(palabra) {
+  try {
+    const resp = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(palabra)}&langpair=en|es`);
+    const data = await resp.json();
+    console.log(data.responseData.translatedText); // Mostrar la traducción
+    return data.responseData.translatedText;
+  } catch (error) {
+    console.error("Error al traducir:", error);
+    return null;
   }
+}
+  
+
 
   async function checkWord() {
     const input = document.getElementById('userInput').value.trim().toLowerCase();
