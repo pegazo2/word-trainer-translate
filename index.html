@@ -255,7 +255,7 @@ ul#savedWords li button:hover {
 
   async function traducirPalabra(palabra) {
     try {
-      const resp = await fetch('https://api.allorigins.win/raw?url=' + encodeURIComponent('https://libretranslate.de/translate'), {
+      const resp = await fetch('https://api.mymemory.translated.net/get?q=hello world!&langpair=en|es'), {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({
