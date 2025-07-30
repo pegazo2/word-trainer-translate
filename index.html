@@ -277,13 +277,28 @@ ul#savedWords li button:hover {
 }
 
 async function checkWord() {
-  const input = document.getElementById('userInput').value.trim();
+  const input = document.getElementById('userInput').value.trim().toLowerCase();
   if (current >= words.length || !input) return;
+
   const cw = words[current].replace(/[.,!?;:"]/g, '').toLowerCase();
   const tradu = await traducirPalabra(cw);
-  if (!tradu) return;
 
-  if (normalizar(input) === normalizar(tradu)) {
+  if (!tradu) {
+    alert(`No se encontró traducción para "${cw}", pasando a la siguiente palabra.`);
+    current++;
+    updateDisplay();
+    updateCounter();
+    document.getElementById('userInput').value = '';
+    if (current < words.length) speak(words[current]);
+    else {
+      alert('¡Completado!');
+      document.getElementById('userInput').disabled = true;
+    }
+    return;
+  }
+
+  // Aquí va el resto del código para comparar y verificar
+  if (input === tradu) {
     alert('✅ ¡Correcto!');
     current++;
     updateDisplay();
