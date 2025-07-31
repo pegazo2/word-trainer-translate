@@ -311,8 +311,13 @@ async function checkWord() {
 
   const cw = words[current].replace(/[.,!?;:"]/g, '').toLowerCase();
 
-  // Usamos Azure para traducir la palabra
-  const tradu = await traducirTextoAzure(cw);
+  let tradu;
+  try {
+    tradu = await traducirTextoAzure(cw);
+  } catch (error) {
+    alert('Error al traducir la palabra. Intenta nuevamente.');
+    return;
+  }
 
   if (!tradu) {
     alert(`No se encontró traducción para "${cw}", pasando a la siguiente palabra.`);
@@ -327,24 +332,6 @@ async function checkWord() {
     }
     return;
   }
-
-  if (verificarRespuesta(cw, input, tradu)) {
-    alert('✅ ¡Correcto!');
-    current++;
-    updateDisplay();
-    updateCounter();
-    document.getElementById('userInput').value = '';
-    if (current < words.length) speak(words[current]);
-    else {
-      alert('¡Completado!');
-      document.getElementById('userInput').disabled = true;
-    }
-  } else {
-    alert(`❌ Incorrecto. Era: "${tradu}"`);
-    document.getElementById('userInput').value = '';
-  }
-}
-
 
   if (verificarRespuesta(cw, input, tradu)) {
     alert('✅ ¡Correcto!');
