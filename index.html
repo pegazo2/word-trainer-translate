@@ -255,7 +255,7 @@ ul#savedWords li button:hover {
   }
 async function traducirTextoAzure(texto, idiomaDestino = 'es') {
   try {
-    const response = await fetch('https://word-trainer-translate.vercel.app/', {  // Cambia localhost por tu URL pública cuando la tengas
+    const response = await fetch('https://word-trainer-translate.vercel.app/translate', {  // Cambia localhost por tu URL pública cuando la tengas
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
