@@ -365,22 +365,22 @@ async function checkWord() {
   }
 
   async function revealWord() {
-    if (current >= words.length) {
-      alert('¡Ya completaste todas las palabras!');
-      return;
-    }
-    const palabraActual = words[current].replace(/[.,!?;:"]/g, '').toLowerCase();
-    try {
-      const traduccion = await traducirPalabra(palabraActual);
-      if (traduccion) {
-        alert(`🔍 Traducción: "${palabraActual}" → "${traduccion}"`);
-      } else {
-        alert('❌ No se pudo obtener la traducción.');
-      }
-    } catch {
-      alert('⚠️ Error al traducir la palabra.');
-    }
+  if (current >= words.length) {
+    alert('¡Ya completaste todas las palabras!');
+    return;
   }
+  const palabraActual = words[current].replace(/[.,!?;:"]/g, '').toLowerCase();
+  try {
+    const traduccion = await traducirTextoAzure(palabraActual);
+    if (traduccion) {
+      alert(`🔍 Traducción: "${palabraActual}" → "${traduccion}"`);
+    } else {
+      alert('❌ No se pudo obtener la traducción.');
+    }
+  } catch {
+    alert('⚠️ Error al traducir la palabra.');
+  }
+}
 
   function saveWord() {
     const w = words[current - 1];
