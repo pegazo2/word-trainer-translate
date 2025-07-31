@@ -253,22 +253,23 @@ ul#savedWords li button:hover {
       output.appendChild(span);
     }
   }
-
-  async function traducirPalabra(palabra) {
-    try {
-      const resp = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(palabra)}&langpair=en|es`);
-      const data = await resp.json();
-      const traduccionLimpia = data.responseData.translatedText
-        .toLowerCase()
-        .trim()
-        .replace(/[.,!?¡¿"]/g, '');
-      console.log('Traducción:', traduccionLimpia);
-      return traduccionLimpia;
-    } catch (error) {
-      console.error("Error al traducir:", error);
-      return null;
-    }
+async function traducirTextoAzure(texto, idiomaDestino = 'es') {
+  try {
+    const response = await fetch('http://localhost:3000/translate', {  // Cambia localhost por tu URL pública cuando la tengas
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ text: texto, to: idiomaDestino })
+    });
+    const data = await response.json();
+    return data.translatedText;
+  } catch (error) {
+    console.error('Error al traducir con Azure:', error);
+    return null;
   }
+}
+
 
   // Quitar tildes
 function quitarTildes(texto) {
@@ -309,7 +310,9 @@ async function checkWord() {
   if (current >= words.length || !input) return;
 
   const cw = words[current].replace(/[.,!?;:"]/g, '').toLowerCase();
-  const tradu = await traducirPalabra(cw);
+
+  // Usamos Azure para traducir la palabra
+  const tradu = await traducirTextoAzure(cw);
 
   if (!tradu) {
     alert(`No se encontró traducción para "${cw}", pasando a la siguiente palabra.`);
@@ -324,6 +327,24 @@ async function checkWord() {
     }
     return;
   }
+
+  if (verificarRespuesta(cw, input, tradu)) {
+    alert('✅ ¡Correcto!');
+    current++;
+    updateDisplay();
+    updateCounter();
+    document.getElementById('userInput').value = '';
+    if (current < words.length) speak(words[current]);
+    else {
+      alert('¡Completado!');
+      document.getElementById('userInput').disabled = true;
+    }
+  } else {
+    alert(`❌ Incorrecto. Era: "${tradu}"`);
+    document.getElementById('userInput').value = '';
+  }
+}
+
 
   if (verificarRespuesta(cw, input, tradu)) {
     alert('✅ ¡Correcto!');
