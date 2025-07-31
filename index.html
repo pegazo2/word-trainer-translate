@@ -434,6 +434,19 @@ async function checkWord() {
     a.download = 'palabras_guardadas.txt'; 
     a.click();
   }
+  function saltarPalabra() {
+  if (current < words.length - 1) {
+    current++;
+    updateDisplay();
+    updateCounter();
+    document.getElementById('userInput').value = '';
+    speak(words[current]);
+  } else {
+    alert('¡Has llegado al final de las palabras!');
+    document.getElementById('userInput').disabled = true;
+  }
+}
+
 </script>
 
 </body>
