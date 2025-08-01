@@ -253,9 +253,10 @@ ul#savedWords li button:hover {
       output.appendChild(span);
     }
   }
+  
 async function traducirTextoAzure(texto, idiomaDestino = 'es') {
   try {
-    const response = await fetch('https://my-duo-translate-backend.vercel.app/api/translate', {
+    const response = await fetch('https://my-duo-translate-backend.vercel.app/translate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ text: texto, to: idiomaDestino })
